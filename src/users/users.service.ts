@@ -16,4 +16,17 @@ export class UsersService {
 
     return user;
   }
+  login(body: CreateUserDto) {
+    const user = this.users.find((u) => u.email === body.email);
+
+    if (!user) {
+      return 'Usuário não encontrado';
+    }
+
+    if (user.password !== body.password) {
+      return 'Senha incorreta';
+    }
+
+    return 'Login realizado com sucesso';
+  }
 }
