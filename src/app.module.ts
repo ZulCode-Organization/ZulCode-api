@@ -6,7 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { FeatureModule } from './feature/feature.module';
 
 @Module({
-  imports: [AuthModule, ConfigModule.forRoot({ isGlobal: true }), FeatureModule],
+  imports: [
+    AuthModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    FeatureModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
