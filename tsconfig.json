@@ -1,19 +1,27 @@
 {
   "compilerOptions": {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    "types": ["node", "jest"],
+>>>>>>> origin/master
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+<<<<<<< HEAD
 =======
     "module": "commonjs",
 >>>>>>> c62b21e95afd1b1bf4982f590e2e86ae52fa35d3
+=======
+>>>>>>> origin/master
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+<<<<<<< HEAD
 <<<<<<< HEAD
     "target": "ES2023",
 =======
@@ -25,6 +33,13 @@
     "incremental": true,
     "skipLibCheck": true,
 <<<<<<< HEAD
+=======
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": true,
+    "skipLibCheck": true,
+>>>>>>> origin/master
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
@@ -32,6 +47,7 @@
     "noFallthroughCasesInSwitch": false
   }
 }
+<<<<<<< HEAD
 =======
     "strictNullChecks": false,
     "noImplicitAny": false,
@@ -41,3 +57,5 @@
   }
 }
 >>>>>>> c62b21e95afd1b1bf4982f590e2e86ae52fa35d3
+=======
+>>>>>>> origin/master
