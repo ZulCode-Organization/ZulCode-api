@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { CurrentUser } from 'src/auth/current-user.decorator';
-import { CurrentUserDto } from 'src/auth/current-user.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { CurrentUserDto } from '../auth/current-user.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('feature')
 export class FeatureController {
