@@ -5,6 +5,8 @@ Content-Type: application/json
     "email": "test@acme.com",
     "password": "test"
 }
+// primeiro faça o signup para criar o usuário,
+//depois use o mesmo email e senha para fazer o signin e obter o token JWT.
 
 ### signin
 POST http://localhost:3000/auth/signin

@@ -13,6 +13,6 @@ export class FeatureController {
   @Get('private')
   @UseGuards(JwtAuthGuard)
   getPrivateFeature(@CurrentUser() user: CurrentUserDto) {
-    return `This is a private feature for user ${user.username}`;
+    return `This is a private feature for user ${user.userId}`;
   }
 }

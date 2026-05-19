@@ -3,4 +3,4 @@ GET http://localhost:3000/feature/public
 
 ### private
 GET http://localhost:3000/feature/private
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RAYWNtZS5jb20iLCJpYXQiOjE3MTU4ODA2NzQsImV4cCI6MTcxNTg4MDczNH0.CKEGT_Fy1aCJt6AjyH3uZ3yTjXdKVCb8g-gGjqfC4Dg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBhY21lLmNvbSIsImlhdCI6MTc3OTIzMDMxOCwiZXhwIjoxNzc5MjMwMzc4fQ.HoRIhJfHMVcknWTDFU8B4OMqz963lMtnBj01s27pc10

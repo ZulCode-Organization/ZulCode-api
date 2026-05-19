@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "commonjs", // futuramente fazer atualização para 'nodenext' no module e moduleResolution porém é necessário tomar cuidado com os imports que podem quebrar.
     "moduleResolution": "node",
+    "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
     "isolatedModules": false,
     "declaration": true,
@@ -12,7 +13,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "paths": {"src/*": ["./src/*"]},// versão atualizada do baseURL.
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
