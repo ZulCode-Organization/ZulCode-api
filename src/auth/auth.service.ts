@@ -7,14 +7,12 @@ import { JwtService } from '@nestjs/jwt';
 import { randomBytes, scrypt as _scrypt, randomUUID } from 'crypto';
 import { promisify } from 'util';
 
-
 const scrypt = promisify(_scrypt);
 
 type JwtPayload = {
   sub: string;
   email: string;
 };
-
 
 interface User {
   id: string;
@@ -29,7 +27,7 @@ const users: User[] = [];
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async signUp(name: string, email: string, password: string) {
+  async signUp(name: string, email: string, password: string, roles: string[] = []) {
     const existingUser = users.find((user) => user.email === email);
 
     if (existingUser) {
@@ -44,6 +42,7 @@ export class AuthService {
       name,
       email,
       password: `${salt}.${hash.toString('hex')}`,
+      roles,
     };
 
     users.push(user);
@@ -72,8 +71,9 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      roles: user.roles,
     };
-
+    //Após o login coim sucesso as informações do payload vão para o token JWT. 
     return {
       // Transforma o payload em um token JWT usando a chave secreta configurada no JwtModule.
       accessToken: this.jwtService.sign(payload),

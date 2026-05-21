@@ -3,7 +3,8 @@ Content-Type: application/json
 
 {
     "email": "test@acme.com",
-    "password": "test"
+    "password": "test",
+    "roles": ["admin"]
 }
 // primeiro faça o signup para criar o usuário,
 //depois use o mesmo email e senha para fazer o signin e obter o token JWT.

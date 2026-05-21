@@ -9,9 +9,9 @@ export class AuthController {
 
   @Post('signup')
   signUp(@Body() body: CreateUserDto) {
-    const { name, email, password } = body;
+    const { name, email, password, roles } = body;
     
-    return this.authService.signUp(name, email, password);
+    return this.authService.signUp(name, email, password, roles);
   }
 
   @Post('signin')

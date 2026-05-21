@@ -15,7 +15,7 @@ import { JwtStrategy } from './jwt.strategy';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         // chave de criptografia do JWT, que iremos pegar do .env usando o ConfigService.
-        secret: config.get('JWT_SECRET') ?? 'senha-secreta',
+        secret: config.getOrThrow<string>('JWT_SECRET'),
         signOptions: { expiresIn: '60s' },
       }),
     }),

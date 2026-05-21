@@ -18,7 +18,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 //    Ou seja, em rotas protegidas, você consegue acessar esses dados
 //    usando @CurrentUser() ou request.user.
 type JwtPayload = {
-  sub: number; // userId
+  sub: string; // userId
   email: string;
 };
 
@@ -26,7 +26,7 @@ type JwtPayload = {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
     super({
-      secretOrKey: config.get<string>('JWT_SECRET') ?? 'senha-secreta',
+      secretOrKey: config.getOrThrow<string>('JWT_SECRET'),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
     });

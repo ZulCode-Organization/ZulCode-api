@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs", // futuramente fazer atualização para 'nodenext' no module e moduleResolution porém é necessário tomar cuidado com os imports que podem quebrar.
     "moduleResolution": "node",
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "isolatedModules": false,
     "declaration": true,
