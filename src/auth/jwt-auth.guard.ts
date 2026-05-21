@@ -1,47 +1,43 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ROLES_KEY } from './roles.decoreator';
-import { JwtService } from '@nestjs/jwt';
-import { Observable } from 'rxjs';
+
+type JwtRequestUser = {
+  userId: string;
+  email: string;
+  roles?: string[];
+};
 
 @Injectable()
 // elimina os erros de digitação do AuthGuard('jwt') no controller, e também torna o código mais limpo.
 export class JwtAuthGuard extends AuthGuard('jwt') {
-    constructor( 
-        private readonly reflector: Reflector,
-        private readonly jwtService: JwtService,
-     ) {
-      super(); 
-    }
-    async canActivate(
-        context: ExecutionContext,
-    ): Promise<boolean | Promise<boolean> | Observable<boolean>> {
-        
-        const canActivate = await super.canActivate(context);//verifica se o token é válido, se não for, retorna false e não deixa acessar a rota
-        if (!canActivate) {
-            return false;
-        }
+  constructor(private readonly reflector: Reflector) {
+    super();
+  }
 
-        const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-            ROLES_KEY, 
-            [context.getHandler(),context.getClass()],
-        );
-        if (!requiredRoles) {
-            return true; // se não houver roles/permissões, qualquer usuário autenticado pode acessar a rota
-        }
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const canActivate = await super.canActivate(context);
+    if (!canActivate) {
+      return false;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!requiredRoles?.length) {
+      return true; // se não houver roles/permissões, qualquer usuário autenticado pode acessar a rota
+    }
 
-    //Authorization: Bearer <token>
-    const payload = this.jwtService.verify(token);
-    const userRoles = payload.roles || [];
-    const hasRole = () =>
-        this.userRoles.some((role) => requiredRoles.includes(role));
-    if (!this.hasRole()) {
-        return new UnauthorizedException('Insufficient permissions'); // se o usuário não tiver a role necessária, retorna 401 Unauthorized
+    const request = context.switchToHttp().getRequest<{ user?: JwtRequestUser }>();
+    const userRoles = request.user?.roles ?? [];
+    const hasRole = userRoles.some((role) => requiredRoles.includes(role));
+
+    if (!hasRole) {
+      throw new ForbiddenException('Insufficient permissions');
     }
 
     return true; // se o usuário tiver a role necessária, permite o acesso à rota
+  }
 }

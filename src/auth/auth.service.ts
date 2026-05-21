@@ -12,6 +12,7 @@ const scrypt = promisify(_scrypt);
 type JwtPayload = {
   sub: string;
   email: string;
+  roles: string[];
 };
 
 interface User {
@@ -19,6 +20,7 @@ interface User {
   name: string;
   email: string;
   password: string;
+  roles: string[];
 }
 
 const users: User[] = [];
@@ -27,7 +29,12 @@ const users: User[] = [];
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async signUp(name: string, email: string, password: string, roles: string[] = []) {
+  async signUp(
+    name: string,
+    email: string,
+    password: string,
+    roles: string[] = [],
+  ) {
     const existingUser = users.find((user) => user.email === email);
 
     if (existingUser) {
@@ -42,7 +49,7 @@ export class AuthService {
       name,
       email,
       password: `${salt}.${hash.toString('hex')}`,
-      roles,
+      roles: [...roles],
     };
 
     users.push(user);
@@ -73,7 +80,7 @@ export class AuthService {
       email: user.email,
       roles: user.roles,
     };
-    //Após o login coim sucesso as informações do payload vão para o token JWT. 
+    // Após o login com sucesso as informações do payload vão para o token JWT.
     return {
       // Transforma o payload em um token JWT usando a chave secreta configurada no JwtModule.
       accessToken: this.jwtService.sign(payload),
