@@ -1,4 +1,5 @@
 export class CurrentUserDto {
-  userId!: number;
+  userId!: string;
   email!: string;
+  roles!: string[];
 }

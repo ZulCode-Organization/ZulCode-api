@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes, randomUUID, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
+import { PrismaService } from '../prisma/prisma.service';
 
 const scrypt = promisify(_scrypt);
 
@@ -22,28 +23,22 @@ type GoogleUser = {
   avatar?: string;
 };
 
-interface User {
+type User = {
   id: string;
   name: string;
   email: string;
-  password?: string;
-  googleId?: string;
-  avatar?: string;
+  password?: string | null;
+  googleId?: string | null;
+  avatar?: string | null;
   roles: string[];
-}
-
-interface PasswordResetToken {
-  token: string;
-  email: string;
-  expiresAt: Date;
-}
-
-const users: User[] = [];
-const passwordResetTokens: PasswordResetToken[] = [];
+};
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   private generateAccessToken(user: User) {
     const payload: JwtPayload = {
@@ -63,7 +58,9 @@ export class AuthService {
     password: string,
     roles: string[] = [],
   ) {
-    const existingUser = users.find((user) => user.email === email);
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
     if (existingUser) {
       throw new BadRequestException('Email ja esta em uso');
@@ -72,15 +69,14 @@ export class AuthService {
     const salt = randomBytes(8).toString('hex');
     const hash = (await scrypt(password, salt, 32)) as Buffer;
 
-    const user: User = {
-      id: randomUUID(),
-      name,
-      email,
-      password: `${salt}.${hash.toString('hex')}`,
-      roles: [...roles],
-    };
-
-    users.push(user);
+    const user = await this.prisma.user.create({
+      data: {
+        name,
+        email,
+        password: `${salt}.${hash.toString('hex')}`,
+        roles,
+      },
+    });
 
     return {
       id: user.id,
@@ -90,7 +86,9 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string) {
-    const user = users.find((user) => user.email === email);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
     if (!user || !user.password) {
       throw new UnauthorizedException('Credenciais invalidas');
@@ -106,8 +104,10 @@ export class AuthService {
     return this.generateAccessToken(user);
   }
 
-  forgotPassword(email: string) {
-    const user = users.find((user) => user.email === email);
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
     if (!user) {
       throw new BadRequestException('Usuario nao encontrado');
@@ -118,10 +118,12 @@ export class AuthService {
 
     // Em um projeto real, esse token seria enviado por email.
     // Aqui retornamos ele na resposta para facilitar os testes do TCC.
-    passwordResetTokens.push({
-      token,
-      email,
-      expiresAt,
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token,
+        email,
+        expiresAt,
+      },
     });
 
     return {
@@ -131,9 +133,9 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const resetToken = passwordResetTokens.find(
-      (resetToken) => resetToken.token === token,
-    );
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { token },
+    });
 
     if (!resetToken) {
       throw new BadRequestException('Token invalido');
@@ -143,7 +145,9 @@ export class AuthService {
       throw new BadRequestException('Token expirado');
     }
 
-    const user = users.find((user) => user.email === resetToken.email);
+    const user = await this.prisma.user.findUnique({
+      where: { email: resetToken.email },
+    });
 
     if (!user) {
       throw new BadRequestException('Usuario nao encontrado');
@@ -152,37 +156,44 @@ export class AuthService {
     const salt = randomBytes(8).toString('hex');
     const hash = (await scrypt(newPassword, salt, 32)) as Buffer;
 
-    user.password = `${salt}.${hash.toString('hex')}`;
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: `${salt}.${hash.toString('hex')}` },
+    });
 
-    const tokenIndex = passwordResetTokens.indexOf(resetToken);
-    passwordResetTokens.splice(tokenIndex, 1);
+    await this.prisma.passwordResetToken.delete({
+      where: { id: resetToken.id },
+    });
 
     return {
       message: 'Senha alterada com sucesso',
     };
   }
 
-  googleLogin(googleUser: GoogleUser) {
-    let user = users.find(
-      (user) =>
-        user.googleId === googleUser.googleId || user.email === googleUser.email,
-    );
+  async googleLogin(googleUser: GoogleUser) {
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ googleId: googleUser.googleId }, { email: googleUser.email }],
+      },
+    });
 
     if (!user) {
-      user = {
-        id: randomUUID(),
-        name: googleUser.name,
-        email: googleUser.email,
-        googleId: googleUser.googleId,
-        avatar: googleUser.avatar,
-        roles: [],
-      };
-
-      users.push(user);
+      user = await this.prisma.user.create({
+        data: {
+          name: googleUser.name,
+          email: googleUser.email,
+          googleId: googleUser.googleId,
+          avatar: googleUser.avatar,
+          roles: [],
+        },
+      });
     }
 
     if (!user.googleId) {
-      user.googleId = googleUser.googleId;
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { googleId: googleUser.googleId },
+      });
     }
 
     return this.generateAccessToken(user);
