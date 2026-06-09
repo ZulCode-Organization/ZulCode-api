@@ -13,7 +13,7 @@ const scrypt = promisify(_scrypt);
 type JwtPayload = {
   sub: string;
   email: string;
-  roles: string[];
+  role: string;
 };
 
 type GoogleUser = {
@@ -30,7 +30,7 @@ type User = {
   password?: string | null;
   googleId?: string | null;
   avatar?: string | null;
-  roles: string[];
+  role: string;
 };
 
 @Injectable()
@@ -44,7 +44,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      roles: user.roles,
+      role: user.role,
     };
 
     return {
@@ -56,7 +56,7 @@ export class AuthService {
     name: string,
     email: string,
     password: string,
-    roles: string[] = [],
+    role: string = 'USER',
   ) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
@@ -74,7 +74,7 @@ export class AuthService {
         name,
         email,
         password: `${salt}.${hash.toString('hex')}`,
-        roles,
+        role,
       },
     });
 
@@ -184,7 +184,7 @@ export class AuthService {
           email: googleUser.email,
           googleId: googleUser.googleId,
           avatar: googleUser.avatar,
-          roles: [],
+          role: 'USER',
         },
       });
     }

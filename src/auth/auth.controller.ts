@@ -17,10 +17,10 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  signUp(@Body() body: CreateUserDto) {
-    const { name, email, password, roles } = body;
-    
-    return this.authService.signUp(name, email, password, roles);
+  async signUp(@Body() body: any) {
+    const { name, email, password, role } = body;
+
+    return this.authService.signUp(name, email, password, role);
   }
 
   @Post('signin')

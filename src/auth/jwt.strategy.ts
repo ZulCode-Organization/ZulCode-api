@@ -20,7 +20,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 type JwtPayload = {
   sub: string; // userId
   email: string;
-  roles: string[];
+  role: string;
 };
 
 @Injectable()
@@ -41,9 +41,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Aqui escolhemos quais dados do payload vão ficar disponíveis
     // na requisição protegida como request.user.
     return {
-      userId: payload.sub,
+      sub: payload.sub,
       email: payload.email,
-      roles: payload.roles,
+      role: payload.role,
     };
   }
 }

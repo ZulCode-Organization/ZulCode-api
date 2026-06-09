@@ -13,10 +13,10 @@ export class FeatureController {
 
   @Get('private')
   @UseGuards(JwtAuthGuard)
-  getPrivateFeature(@CurrentUser() user: CurrentUserDto) {
-    return `This is a private feature for user ${user.userId}`;
+  @Get()
+  getFeature(@CurrentUser() user: CurrentUserDto) {
+    return `This is a private feature for user ${user.sub}`;
   }
-
   @Get('admin')// Uso da rota admin, que só pode ser acessada por usuários com a role 'admin'
   @Roles('admin') //Necessário criar um decorator de Roles e um guard para verificar as roles do usuário
   @UseGuards(JwtAuthGuard)

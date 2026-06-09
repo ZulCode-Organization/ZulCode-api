@@ -6,7 +6,7 @@ import { ROLES_KEY } from './roles.decoreator';
 type JwtRequestUser = {
   userId: string;
   email: string;
-  roles?: string[];
+  role?: string;
 };
 
 @Injectable()
@@ -31,8 +31,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const request = context.switchToHttp().getRequest<{ user?: JwtRequestUser }>();
-    const userRoles = request.user?.roles ?? [];
-    const hasRole = userRoles.some((role) => requiredRoles.includes(role));
+    const userRole = request.user?.role;
+    const hasRole = userRole ? requiredRoles.includes(userRole) : false;
 
     if (!hasRole) {
       throw new ForbiddenException('Insufficient permissions');

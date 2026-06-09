@@ -3,7 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -13,11 +14,19 @@ model User {
   password  String?
   googleId  String?  @unique
   avatar    String?
-  roles     String[] @default([])
+  role      String   @default("USER")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  xp          Int      @default(0)
+  coins       Int      @default(0)
+  hearts      Int      @default(5)
+  streak      Int      @default(0)
+  lastActive  DateTime @default(now())
+
   resetTokens PasswordResetToken[]
+  progress    UserProgress[]
+  inventory   UserInventory[]
 }
 
 model PasswordResetToken {
@@ -28,4 +37,81 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [email], references: [email], onDelete: Cascade)
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  icon        String?
+  units       Unit[]
+}
+
+model Unit {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  order       Int
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  order       Int
+  xpReward    Int      @default(10)
+  unitId      String
+  unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  progress    UserProgress[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  type          String
+  prompt        String
+  options       Json?
+  correctAnswer String
+  explanation   String?
+  lessonId      String
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model UserProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  lessonId    String
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  score       Int?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model ShopItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Int
+  image       String?
+  type        String
+  inventories UserInventory[]
+}
+
+model UserInventory {
+  id          String   @id @default(uuid())
+  userId      String
+  shopItemId  String
+  quantity    Int      @default(1)
+  purchasedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItem    ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shopItemId])
 }

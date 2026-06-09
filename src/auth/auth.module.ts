@@ -17,7 +17,7 @@ import { GoogleStrategy } from './google.strategy';
       useFactory: (config: ConfigService) => ({
         // chave de criptografia do JWT, que iremos pegar do .env usando o ConfigService.
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '60s' },
+        signOptions: { expiresIn: '7d' },
       }),
     }),
   ],
