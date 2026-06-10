@@ -39,4 +39,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "echo DATABASE_URL=$DATABASE_URL && npx prisma migrate deploy"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main || echo 'APP CRASHED' && sleep 9999"]
