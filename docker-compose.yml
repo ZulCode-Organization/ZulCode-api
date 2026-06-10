@@ -27,7 +27,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/zulcode
+      - DATABASE_URL=${DATABASE_URL}
       - GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
