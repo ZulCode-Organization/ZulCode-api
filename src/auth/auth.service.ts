@@ -31,6 +31,9 @@ type User = {
   googleId?: string | null;
   avatar?: string | null;
   roles: string[];
+  loginStreak: number;
+  lastLoginAt?: Date | null;
+  createdAt: Date;
 };
 
 @Injectable()
@@ -49,7 +52,45 @@ export class AuthService {
 
     return {
       accessToken: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        roles: user.roles,
+        createdAt: user.createdAt,
+        loginStreak: user.loginStreak,
+        lastLoginAt: user.lastLoginAt,
+      },
     };
+  }
+
+  private getUtcDayNumber(date: Date) {
+    return Math.floor(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) /
+        86_400_000,
+    );
+  }
+
+  private async recordDailyLogin(user: User, now = new Date()) {
+    const lastLoginDay = user.lastLoginAt
+      ? this.getUtcDayNumber(user.lastLoginAt)
+      : null;
+    const currentDay = this.getUtcDayNumber(now);
+
+    let loginStreak = 1;
+    if (lastLoginDay === currentDay) {
+      loginStreak = Math.max(user.loginStreak, 1);
+    } else if (lastLoginDay === currentDay - 1) {
+      loginStreak = user.loginStreak + 1;
+    }
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        loginStreak,
+        lastLoginAt: now,
+      },
+    });
   }
 
   async signUp(
@@ -82,6 +123,8 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      createdAt: user.createdAt,
+      loginStreak: user.loginStreak,
     };
   }
 
@@ -101,7 +144,9 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais invalidas');
     }
 
-    return this.generateAccessToken(user);
+    const loggedUser = await this.recordDailyLogin(user);
+
+    return this.generateAccessToken(loggedUser);
   }
 
   async forgotPassword(email: string) {
@@ -196,6 +241,8 @@ export class AuthService {
       });
     }
 
-    return this.generateAccessToken(user);
+    const loggedUser = await this.recordDailyLogin(user);
+
+    return this.generateAccessToken(loggedUser);
   }
 }

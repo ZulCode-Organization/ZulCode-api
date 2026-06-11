@@ -1,7 +1,8 @@
-POST http://localhost:3000/auth/signup
+POST http://localhost:3001/auth/signup
 Content-Type: application/json
 
 {
+    "name": "Test User",
     "email": "test@acme.com",
     "password": "test",
     "roles": ["admin"]
@@ -10,10 +11,27 @@ Content-Type: application/json
 //depois use o mesmo email e senha para fazer o signin e obter o token JWT.
 
 ### signin
-POST http://localhost:3000/auth/signin
+POST http://localhost:3001/auth/signin
 Content-Type: application/json
 
 {
     "email": "test@acme.com",
     "password": "test"
+}
+
+### forgot password
+POST http://localhost:3001/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email": "test@acme.com"
+}
+
+### reset password
+POST http://localhost:3001/auth/reset-password
+Content-Type: application/json
+
+{
+    "token": "COLE_O_RESET_TOKEN_AQUI",
+    "newPassword": "new-password"
 }

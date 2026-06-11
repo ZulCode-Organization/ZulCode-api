@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CurrentUserDto } from '../auth/current-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from 'src/auth/roles.decoreator';
+import { Roles } from '../auth/roles.decoreator';
 
 @Controller('feature')
 export class FeatureController {
