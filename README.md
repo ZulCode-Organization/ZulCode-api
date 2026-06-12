@@ -1,39 +1,57 @@
 # ZulCode API
 
-API de autenticação e controle de acesso desenvolvida com NestJS como projeto de TCC.
+API de autenticação e controle de acesso desenvolvida em NestJS como projeto de TCC.
 
 ## Sobre o projeto
 
-A ZulCode API é o backend responsável por:
+A ZulCode API é o backend responsável por autenticação de usuários, controle de acesso por roles e gamificação de login diário. Desenvolvida com NestJS sobre Node.js, segue a estrutura padrão de módulos, controllers, services, DTOs e Prisma.
 
-- Cadastro e autenticação de usuários com email e senha
-- Emissão e validação de tokens JWT
-- Controle de acesso por roles (ex.: `admin`)
-- Login com Google OAuth 2.0
-- Recuperação de senha via token
-- Controle de sequência diária de login (`loginStreak`)
+**Foco acadêmico:** o código prioriza clareza e fluxo direto. As decisões de simplificação estão documentadas como limitações conhecidas.
 
-Este projeto tem foco acadêmico (TCC) e prioriza clareza de código, fluxo direto e facilidade de demonstração.
+---
+
+## Funcionalidades
+
+| Funcionalidade | Status |
+|---|---|
+| Cadastro com email e senha | ✅ |
+| Login com email e senha + JWT | ✅ |
+| Controle de acesso por roles | ✅ |
+| Rota pública, privada e admin | ✅ |
+| Login com Google OAuth 2.0 | ✅ |
+| Recuperação e redefinição de senha | ✅ |
+| Sequência de login diário (`loginStreak`) | ✅ |
+| Validação de entrada com `class-validator` | ✅ |
+
+---
 
 ## Tecnologias
 
-- [Node.js](https://nodejs.org)
-- [NestJS](https://nestjs.com)
-- [TypeScript](https://www.typescriptlang.org)
-- [Prisma ORM](https://www.prisma.io)
-- [PostgreSQL](https://www.postgresql.org)
-- [Passport.js](https://www.passportjs.org) (JWT + Google OAuth 2.0)
-- [Jest](https://jestjs.io) + [Supertest](https://github.com/ladjs/supertest)
+| Tecnologia | Uso |
+|---|---|
+| Node.js + TypeScript | Runtime e tipagem |
+| NestJS | Framework principal |
+| Prisma ORM | Acesso ao banco de dados |
+| PostgreSQL | Banco de dados |
+| Passport.js | Estratégias de autenticação |
+| JWT (`@nestjs/jwt`) | Emissão e validação de tokens |
+| Google OAuth 2.0 | Login social |
+| `class-validator` | Validação de DTOs |
+| Jest + Supertest | Testes unitários e e2e |
+
+---
 
 ## Pré-requisitos
 
 - Node.js 20+
 - PostgreSQL 16+ (ou Docker)
-- Conta Google com credenciais OAuth configuradas
+- Credenciais Google OAuth configuradas no [Google Cloud Console](https://console.cloud.google.com/)
+
+---
 
 ## Variáveis de ambiente
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 DATABASE_URL=postgresql://usuario:senha@localhost:5432/zulcode
@@ -43,150 +61,252 @@ GOOGLE_CLIENT_SECRET=seu-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
 ```
 
-> **Atenção:** Nunca versione o arquivo `.env` com valores reais. Ele já está no `.gitignore`.
+> ⚠️ O `.env` nunca deve ser versionado. Ele já está no `.gitignore`.
+>
+> No Google Cloud Console, registre exatamente a mesma URL configurada em `GOOGLE_CALLBACK_URL`.
 
-## Instalação
+---
+
+## Instalação e execução
+
+### 1. Instalar dependências
 
 ```bash
 npm install
 ```
 
-## Banco de dados
-
-Iniciar o banco com Docker (recomendado para desenvolvimento):
+### 2. Subir o banco com Docker (recomendado)
 
 ```bash
 docker compose up db -d
 ```
 
-Aplicar as migrations do Prisma:
+### 3. Aplicar migrations e gerar o Prisma Client
 
 ```bash
 npx prisma migrate deploy
-```
-
-Gerar o Prisma Client:
-
-```bash
 npx prisma generate
 ```
 
-## Rodando o projeto
+### 4. Rodar em desenvolvimento
 
 ```bash
-# Desenvolvimento (modo watch)
 npm run start:dev
+```
 
-# Produção
+A API estará disponível em `http://localhost:3001`.
+
+### 5. Build de produção
+
+```bash
 npm run build
 npm run start:prod
 ```
 
-A API escuta por padrão em:
+---
 
-```
-http://localhost:3001
-```
-
-## Endpoints principais
+## Endpoints
 
 ### Status
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/` | Hello World |
-| GET | `/status` | Status da API |
+| Método | Rota | Autenticação | Resposta |
+|--------|------|---|---|
+| `GET` | `/` | Nenhuma | `Hello World!` |
+| `GET` | `/status` | Nenhuma | `OK` |
 
 ### Autenticação
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/auth/signup` | Cadastro de usuário |
-| POST | `/auth/signin` | Login com email e senha |
-| POST | `/auth/forgot-password` | Gerar token de recuperação de senha |
-| POST | `/auth/reset-password` | Redefinir senha com token |
-| GET | `/auth/google` | Iniciar login com Google |
-| GET | `/auth/google/callback` | Callback do Google OAuth |
+| Método | Rota | Autenticação | Descrição |
+|--------|------|---|---|
+| `POST` | `/auth/signup` | Nenhuma | Cadastro de usuário |
+| `POST` | `/auth/signin` | Nenhuma | Login com email e senha |
+| `POST` | `/auth/forgot-password` | Nenhuma | Gerar token de recuperação |
+| `POST` | `/auth/reset-password` | Nenhuma | Redefinir senha com token |
+| `GET` | `/auth/google` | Nenhuma | Iniciar login com Google |
+| `GET` | `/auth/google/callback` | Nenhuma | Callback do Google OAuth |
 
-### Feature (rotas protegidas)
+### Feature (rotas de exemplo)
 
-| Método | Rota | Proteção | Descrição |
-|--------|------|----------|-----------|
-| GET | `/feature/public` | Nenhuma | Rota pública |
-| GET | `/feature/private` | JWT | Rota autenticada |
-| GET | `/feature/admin` | JWT + role `admin` | Rota administrativa |
+| Método | Rota | Autenticação | Descrição |
+|--------|------|---|---|
+| `GET` | `/feature/public` | Nenhuma | Rota pública |
+| `GET` | `/feature/private` | JWT | Rota autenticada |
+| `GET` | `/feature/admin` | JWT + role `admin` | Rota administrativa |
+
+---
+
+## Exemplos de uso
+
+### Cadastro
+
+```http
+POST /auth/signup
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "password": "minhasenha123",
+  "roles": ["admin"]
+}
+```
+
+> `roles` é opcional. Quando omitido, o usuário é criado sem permissões especiais.
+
+Resposta `201`:
+
+```json
+{
+  "id": "uuid",
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "createdAt": "2026-06-12T...",
+  "loginStreak": 0
+}
+```
+
+### Login
+
+```http
+POST /auth/signin
+Content-Type: application/json
+
+{
+  "email": "joao@email.com",
+  "password": "minhasenha123"
+}
+```
+
+Resposta `200`:
+
+```json
+{
+  "accessToken": "eyJhbGci...",
+  "user": {
+    "id": "uuid",
+    "name": "João Silva",
+    "email": "joao@email.com",
+    "roles": ["admin"],
+    "createdAt": "2026-06-12T...",
+    "loginStreak": 1,
+    "lastLoginAt": "2026-06-12T..."
+  }
+}
+```
+
+### Rota privada
+
+```http
+GET /feature/private
+Authorization: Bearer eyJhbGci...
+```
+
+### Recuperação de senha
+
+```http
+POST /auth/forgot-password
+Content-Type: application/json
+
+{ "email": "joao@email.com" }
+```
+
+Resposta `201`:
+
+```json
+{
+  "message": "Token de recuperacao gerado com sucesso",
+  "resetToken": "uuid-do-token"
+}
+```
+
+```http
+POST /auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "uuid-do-token",
+  "newPassword": "novasenha456"
+}
+```
+
+---
 
 ## Testes
 
 ```bash
-# Testes unitários
+# Testes unitários (15 testes)
 npm test
 
-# Testes e2e
+# Testes e2e (19 testes, sem banco real)
 npm run test:e2e
 
 # Cobertura
 npm run test:cov
 ```
 
-## Docker Compose
+---
 
-Para subir a aplicação completa com banco de dados:
+## Validação de entrada
 
-```bash
-docker compose up --build
-```
+Todos os endpoints utilizam `ValidationPipe` global com `class-validator`. Payloads inválidos retornam `400 Bad Request` com descrição do erro.
+
+Exemplos de erros validados:
+
+| Caso | Resposta |
+|---|---|
+| `POST /auth/signup` sem `password` | `400 Bad Request` |
+| `POST /auth/signin` com email inválido | `400 Bad Request` |
+| `POST /auth/forgot-password` com body vazio | `400 Bad Request` |
+
+---
 
 ## Limitações conhecidas (TCC)
 
-1. **Recuperação de senha simplificada**: o token é retornado na resposta da API para facilitar testes. Em produção, deveria ser enviado por email.
-2. **JWT com expiração curta**: o token expira em `60s` para demonstração de segurança. Em produção, usar `3600s` ou mais.
-3. **Google OAuth**: depende de credenciais externas e não é coberto por testes automatizados locais.
-4. **Testes e2e**: cobrem os fluxos principais com mock do banco, não com banco real.
+1. **Token de recuperação na resposta** — retornado diretamente pela API para facilitar testes. Em produção, deveria ser enviado por email.
+2. **JWT expira em 60 segundos** — configurado para demonstração de segurança. Ajuste `expiresIn` em `auth.module.ts` conforme necessário.
+3. **Google OAuth** — o fluxo completo depende de credenciais externas e não é coberto por testes automatizados.
+
+---
 
 ## Estrutura do projeto
 
 ```
 src/
-  app.controller.ts
-  app.module.ts
-  app.service.ts
-  main.ts
-
-  auth/
-    auth.controller.ts
-    auth.module.ts
-    auth.service.ts
-    jwt.strategy.ts
-    jwt-auth.guard.ts
-    google.strategy.ts
-    google-auth.guard.ts
-    roles.decoreator.ts
-    current-user.decorator.ts
-    current-user.dto.ts
-    status.controller.ts
-    dto/
-      create-user.dto.ts
-      sign-in.dto.ts
-      forgot-password.dto.ts
-      reset-password.dto.ts
-
-  feature/
-    feature.controller.ts
-    feature.module.ts
-
-  prisma/
-    prisma.module.ts
-    prisma.service.ts
+├── main.ts                      # Bootstrap + ValidationPipe global
+├── app.module.ts
+├── app.controller.ts
+├── app.service.ts
+│
+├── auth/
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── auth.module.ts
+│   ├── jwt.strategy.ts
+│   ├── jwt-auth.guard.ts        # Guard JWT + verificação de roles
+│   ├── google.strategy.ts
+│   ├── google-auth.guard.ts
+│   ├── roles.decoreator.ts
+│   ├── current-user.decorator.ts
+│   ├── current-user.dto.ts
+│   ├── status.controller.ts
+│   └── dto/
+│       ├── create-user.dto.ts
+│       ├── sign-in.dto.ts
+│       ├── forgot-password.dto.ts
+│       └── reset-password.dto.ts
+│
+├── feature/
+│   ├── feature.controller.ts
+│   └── feature.module.ts
+│
+└── prisma/
+    ├── prisma.module.ts
+    └── prisma.service.ts
 
 prisma/
-  schema.prisma
-  migrations/
+├── schema.prisma
+└── migrations/
 
 test/
-  app.e2e-spec.ts
+└── app.e2e-spec.ts
 ```
-
-## Licença
-
-Projeto acadêmico — uso restrito ao TCC.

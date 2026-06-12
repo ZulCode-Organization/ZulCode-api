@@ -1,592 +1,498 @@
-# Documentacao do Projeto ZulCode API
+# Documentação do Projeto — ZulCode API
 
 ## Objetivo do projeto
 
-Esta API foi criada em NestJS para servir como backend simples de autenticacao e controle de acesso do projeto ZulCode.
+Esta API foi criada em NestJS para servir como backend de autenticação e controle de acesso do projeto ZulCode.
 
-O projeto tem foco academico, voltado para um TCC. Por isso, a implementacao prioriza clareza, fluxo direto e facilidade de demonstracao. A estrutura base do codigo deve ser preservada: modulos, controllers, services, DTOs e Prisma devem continuar simples e proximos do padrao inicial do NestJS.
+O projeto tem foco acadêmico (TCC). A implementação prioriza clareza, fluxo direto e facilidade de demonstração. A estrutura segue o padrão NestJS com módulos, controllers, services, DTOs e Prisma, sem abstrações desnecessárias.
+
+---
 
 ## Escopo atual
 
-A API atualmente oferece:
+A API oferece:
 
-- cadastro de usuario com email e senha;
+- cadastro de usuário com email e senha;
 - login com email e senha;
-- emissao de token JWT;
-- controle simples de roles;
-- rota publica;
-- rota privada protegida por JWT;
-- rota administrativa protegida por JWT e role `admin`;
-- recuperacao de senha com token retornado na propria resposta;
-- login com Google OAuth;
-- controle de sequencia diaria de login (`loginStreak`).
+- emissão de token JWT com `sub`, `email` e `roles`;
+- controle de acesso por roles (`admin`);
+- rota pública, rota privada (JWT) e rota administrativa (JWT + role);
+- recuperação de senha com token retornado na resposta;
+- redefinição de senha com token válido;
+- login com Google OAuth 2.0;
+- sequência diária de login (`loginStreak`);
+- validação de entrada com `class-validator` e `ValidationPipe` global.
+
+---
 
 ## Tecnologias principais
 
-- Node.js
-- NestJS
-- TypeScript
-- Prisma
-- PostgreSQL
-- Passport
-- JWT
-- Google OAuth 2.0
-- Jest
-- Supertest
+| Tecnologia | Versão (aprox.) | Uso |
+|---|---|---|
+| Node.js | 20+ | Runtime |
+| NestJS | 11 | Framework |
+| TypeScript | 5.8 | Tipagem |
+| Prisma ORM | 7 | Acesso ao banco |
+| PostgreSQL | 16 | Banco de dados |
+| Passport.js | 0.7 | Estratégias de autenticação |
+| `@nestjs/jwt` | 11 | JWT |
+| `passport-google-oauth20` | 2 | Google OAuth |
+| `class-validator` | 0.15 | Validação de DTOs |
+| Jest + Supertest | 30 / 7 | Testes |
 
-## Estrutura principal
+---
 
-```text
+## Estrutura de arquivos
+
+```
 src/
-  app.controller.ts
-  app.module.ts
-  app.service.ts
-  main.ts
-
-  auth/
-    auth.controller.ts
-    auth.module.ts
-    auth.service.ts
-    jwt.strategy.ts
-    jwt-auth.guard.ts
-    google.strategy.ts
-    google-auth.guard.ts
-    roles.decoreator.ts
-    current-user.decorator.ts
-    current-user.dto.ts
-    status.controller.ts
-    dto/
-
-  feature/
-    feature.controller.ts
-    feature.module.ts
-
-  prisma/
-    prisma.module.ts
-    prisma.service.ts
+├── main.ts                      # Bootstrap da aplicação + ValidationPipe global
+├── app.module.ts                # Módulo raiz
+├── app.controller.ts            # GET /
+├── app.service.ts
+│
+├── auth/
+│   ├── auth.controller.ts       # Rotas de autenticação
+│   ├── auth.service.ts          # Lógica de autenticação
+│   ├── auth.module.ts           # Configuração JWT + Passport
+│   ├── jwt.strategy.ts          # Extrai e valida token JWT do header
+│   ├── jwt-auth.guard.ts        # Guard JWT + verificação de roles
+│   ├── google.strategy.ts       # Estratégia Google OAuth 2.0
+│   ├── google-auth.guard.ts     # Guard para rotas Google
+│   ├── roles.decoreator.ts      # Decorator @Roles(...)
+│   ├── current-user.decorator.ts
+│   ├── current-user.dto.ts
+│   ├── status.controller.ts     # GET /status
+│   └── dto/
+│       ├── create-user.dto.ts   # name, email, password, roles?
+│       ├── sign-in.dto.ts       # email, password
+│       ├── forgot-password.dto.ts # email
+│       └── reset-password.dto.ts  # token, newPassword
+│
+├── feature/
+│   ├── feature.controller.ts    # Rotas pública, privada e admin
+│   └── feature.module.ts
+│
+└── prisma/
+    ├── prisma.module.ts
+    └── prisma.service.ts
 
 prisma/
-  schema.prisma
-  migrations/
+├── schema.prisma
+└── migrations/
 
 test/
-  app.e2e-spec.ts
+└── app.e2e-spec.ts              # 19 testes e2e com mock do banco
 ```
 
-## Modulos
+---
 
-### AppModule
+## Módulos
 
-Arquivo: `src/app.module.ts`
+### AppModule — `src/app.module.ts`
 
-Modulo raiz da aplicacao. Importa:
+Módulo raiz. Importa:
 
-- `ConfigModule`, configurado como global;
+- `ConfigModule.forRoot({ isGlobal: true })` — leitura do `.env` disponível em toda a aplicação;
 - `PrismaModule`;
 - `AuthModule`;
 - `FeatureModule`.
 
-Tambem registra `AppController` e `AppService`.
+### PrismaModule — `src/prisma/`
 
-### PrismaModule
+Fornece o `PrismaService` para acesso ao banco PostgreSQL via `DATABASE_URL`.
 
-Arquivos:
+### AuthModule — `src/auth/auth.module.ts`
 
-- `src/prisma/prisma.module.ts`
-- `src/prisma/prisma.service.ts`
+Responsável pelos fluxos de autenticação. Registra:
 
-Responsavel por fornecer o `PrismaService` para acesso ao banco PostgreSQL.
-
-O `PrismaService` usa `DATABASE_URL` do ambiente para conectar ao banco.
-
-### AuthModule
-
-Arquivo: `src/auth/auth.module.ts`
-
-Responsavel pelos fluxos de autenticacao. Registra:
-
-- `AuthService`;
-- `JwtStrategy`;
-- `GoogleStrategy`;
-- `JwtModule`;
+- `JwtModule.registerAsync` com `JWT_SECRET` e `expiresIn: '60s'`;
 - `PassportModule`;
-- `AuthController`;
-- `StatusController`.
+- `JwtStrategy` e `GoogleStrategy`;
+- `AuthController` e `StatusController`.
 
-O JWT usa a variavel `JWT_SECRET` e esta configurado com expiracao de `60s`.
+### FeatureModule — `src/feature/feature.module.ts`
 
-### FeatureModule
+Módulo com rotas de demonstração:
 
-Arquivo: `src/feature/feature.module.ts`
+- rota pública;
+- rota autenticada por JWT;
+- rota autenticada por JWT com role `admin`.
 
-Modulo com rotas de exemplo para demonstrar:
-
-- rota publica;
-- rota autenticada;
-- rota autenticada com permissao de administrador.
+---
 
 ## Banco de dados
 
-Arquivo principal: `prisma/schema.prisma`
+Arquivo: `prisma/schema.prisma`
 
-### User
+### Modelo `User`
 
-Campos principais:
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String` (UUID) | Identificador único |
+| `name` | `String` | Nome do usuário |
+| `email` | `String` (único) | Email de acesso |
+| `password` | `String?` | Senha com hash `scrypt`. Nulo para usuários Google |
+| `googleId` | `String?` (único) | ID do Google |
+| `avatar` | `String?` | URL da foto do Google |
+| `roles` | `String[]` | Lista de permissões (ex.: `["admin"]`) |
+| `loginStreak` | `Int` | Sequência de dias consecutivos de login |
+| `lastLoginAt` | `DateTime?` | Data do último login |
+| `createdAt` | `DateTime` | Data de criação |
+| `updatedAt` | `DateTime` | Última atualização |
 
-- `id`: identificador unico;
-- `name`: nome do usuario;
-- `email`: email unico;
-- `password`: senha com hash, opcional para usuarios Google;
-- `googleId`: identificador unico do Google, opcional;
-- `avatar`: imagem do Google, opcional;
-- `roles`: lista de permissoes;
-- `loginStreak`: sequencia de dias de login;
-- `lastLoginAt`: data do ultimo login;
-- `createdAt`: data de criacao;
-- `updatedAt`: data de atualizacao.
+### Modelo `PasswordResetToken`
 
-### PasswordResetToken
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `String` (UUID) | Identificador único |
+| `token` | `String` (único) | Token de recuperação (UUID aleatório) |
+| `email` | `String` | Email do usuário |
+| `expiresAt` | `DateTime` | Expiração (15 minutos após criação) |
+| `createdAt` | `DateTime` | Data de criação |
 
-Campos principais:
+O token possui relação com `User` pelo campo `email`. Ao deletar um usuário, os tokens são excluídos em cascata (`onDelete: Cascade`).
 
-- `id`: identificador unico;
-- `token`: token unico de recuperacao;
-- `email`: email do usuario;
-- `expiresAt`: data de expiracao;
-- `createdAt`: data de criacao.
+---
 
-O token possui relacao com `User` pelo campo `email`.
-
-## Variaveis de ambiente
-
-O projeto espera as seguintes variaveis no `.env`:
+## Variáveis de ambiente
 
 ```env
-DATABASE_URL=
-JWT_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/zulcode
+JWT_SECRET=sua-chave-secreta-aqui
+GOOGLE_CLIENT_ID=seu-google-client-id
+GOOGLE_CLIENT_SECRET=seu-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
 ```
 
-Nao documentar valores reais de segredo no repositorio.
+> Nunca versionar valores reais. O `.env` está no `.gitignore`.
+
+---
 
 ## Como rodar
 
-Instalar dependencias:
-
 ```bash
+# 1. Instalar dependências
 npm install
-```
 
-Gerar Prisma Client:
-
-```bash
+# 2. Gerar o Prisma Client
 npx prisma generate
-```
 
-Aplicar migrations:
-
-```bash
+# 3. Aplicar migrations
 npx prisma migrate deploy
-```
 
-Rodar em desenvolvimento:
-
-```bash
+# 4. Rodar em desenvolvimento
 npm run start:dev
-```
 
-Rodar build de producao:
-
-```bash
+# 5. Build de produção
 npm run build
 npm run start:prod
 ```
 
-Por padrao, a API escuta em:
+A API escuta por padrão em `http://localhost:3001`.
 
-```text
-http://localhost:3001
-```
+---
 
-## Endpoints
+## Endpoints e comportamentos
 
-### Status
+### `GET /`
 
-#### `GET /`
+Resposta: `Hello World!`
 
-Retorna:
+### `GET /status`
 
-```text
-Hello World!
-```
+Resposta: `OK`
 
-#### `GET /status`
+---
 
-Retorna:
+### `POST /auth/signup`
 
-```text
-OK
-```
+Cadastra usuário com email e senha.
 
-### Auth
-
-#### `POST /auth/signup`
-
-Cadastra usuario com email e senha.
-
-Body esperado:
+**Body (validado pelo `ValidationPipe`):**
 
 ```json
 {
-  "name": "Nome do Usuario",
-  "email": "usuario@email.com",
-  "password": "senha",
-  "roles": ["admin"]
+  "name": "string — obrigatório",
+  "email": "email válido — obrigatório",
+  "password": "string — obrigatório",
+  "roles": ["string"] // opcional
 }
 ```
 
-`roles` e opcional. Quando omitido, o service usa lista vazia.
-
-Resposta de sucesso:
+**Resposta `201`:**
 
 ```json
 {
   "id": "uuid",
-  "name": "Nome do Usuario",
-  "email": "usuario@email.com",
-  "createdAt": "data",
+  "name": "...",
+  "email": "...",
+  "createdAt": "ISO date",
   "loginStreak": 0
 }
 ```
 
-#### `POST /auth/signin`
+**Erros:**
+- `400` — campo obrigatório ausente ou email inválido;
+- `400` — email já está em uso.
 
-Realiza login com email e senha.
+A senha é armazenada como `salt.hash` usando `scrypt`. Nunca é retornada pela API.
 
-Body esperado:
+---
+
+### `POST /auth/signin`
+
+Login com email e senha.
+
+**Body:**
 
 ```json
 {
-  "email": "usuario@email.com",
-  "password": "senha"
+  "email": "email válido — obrigatório",
+  "password": "string — obrigatório"
 }
 ```
 
-Resposta de sucesso:
+**Resposta `200`:**
 
 ```json
 {
-  "accessToken": "jwt",
+  "accessToken": "JWT",
   "user": {
     "id": "uuid",
-    "name": "Nome do Usuario",
-    "email": "usuario@email.com",
+    "name": "...",
+    "email": "...",
     "roles": [],
-    "createdAt": "data",
+    "createdAt": "ISO date",
     "loginStreak": 1,
-    "lastLoginAt": "data"
+    "lastLoginAt": "ISO date"
   }
 }
 ```
 
-#### `POST /auth/forgot-password`
+**Erros:**
+- `400` — campo inválido;
+- `401` — email não encontrado ou senha incorreta.
 
-Gera token de recuperacao de senha.
+---
 
-Body esperado:
+### `POST /auth/forgot-password`
+
+Gera token de recuperação de senha.
+
+**Body:**
 
 ```json
-{
-  "email": "usuario@email.com"
-}
+{ "email": "email válido — obrigatório" }
 ```
 
-Resposta de sucesso:
+**Resposta `201`:**
 
 ```json
 {
   "message": "Token de recuperacao gerado com sucesso",
-  "resetToken": "token"
+  "resetToken": "uuid"
 }
 ```
 
-Observacao: para simplificar os testes do TCC, o token e retornado diretamente na resposta. Em um sistema real, ele deveria ser enviado por email.
+O token expira em **15 minutos**.
 
-#### `POST /auth/reset-password`
+> **Nota TCC:** o token é retornado na resposta para facilitar testes. Em produção, seria enviado por email.
 
-Altera a senha usando token de recuperacao.
+**Erros:**
+- `400` — email inválido ou usuário não encontrado.
 
-Body esperado:
+---
+
+### `POST /auth/reset-password`
+
+Redefine a senha usando um token válido.
+
+**Body:**
 
 ```json
 {
-  "token": "token",
-  "newPassword": "nova-senha"
+  "token": "string — obrigatório",
+  "newPassword": "string — obrigatório"
 }
 ```
 
-Resposta de sucesso:
+**Resposta `201`:**
 
 ```json
-{
-  "message": "Senha alterada com sucesso"
-}
+{ "message": "Senha alterada com sucesso" }
 ```
 
-#### `GET /auth/google`
+Após o uso, o token é excluído do banco.
 
-Inicia o fluxo de login com Google.
+**Erros:**
+- `400` — token inválido ou expirado;
+- `400` — usuário não encontrado.
 
-O Passport redireciona o usuario para o Google.
+---
 
-#### `GET /auth/google/callback`
+### `GET /auth/google`
 
-Recebe o retorno do Google e cria ou atualiza o usuario na base.
+Inicia o fluxo de login com Google. O Passport redireciona o usuário para a tela de autenticação do Google.
 
-Quando o login Google termina com sucesso, a API retorna JWT no mesmo formato do login comum.
+### `GET /auth/google/callback`
 
-### Feature
+Recebe o retorno do Google após autenticação. Cria o usuário se não existir, associa o `googleId` e retorna o mesmo formato de resposta do `signin`.
 
-#### `GET /feature/public`
+---
 
-Rota publica.
+### `GET /feature/public`
 
-Retorna:
+Sem autenticação. Resposta: `This is a public feature`
 
-```text
-This is a public feature
-```
+### `GET /feature/private`
 
-#### `GET /feature/private`
-
-Rota protegida por JWT.
-
-Header esperado:
+Requer JWT válido no header:
 
 ```http
 Authorization: Bearer TOKEN
 ```
 
-Retorna:
+Resposta: `This is a private feature for user USER_ID`
 
-```text
-This is a private feature for user USER_ID
-```
+**Erro:** `401` sem token.
 
-#### `GET /feature/admin`
+### `GET /feature/admin`
 
-Rota protegida por JWT e role `admin`.
+Requer JWT válido **e** role `admin`.
 
-Header esperado:
+Resposta: `This is an admin route`
 
-```http
-Authorization: Bearer TOKEN
-```
+**Erros:**
+- `401` — sem token;
+- `403` — autenticado, mas sem role `admin`.
 
-Retorna:
+---
 
-```text
-This is an admin route
-```
-
-Se o usuario estiver autenticado, mas nao tiver role `admin`, retorna `403`.
-
-## Regras de autenticacao e autorizacao
+## Autenticação e autorização
 
 ### JWT
 
-O token JWT contem:
+O token é gerado com:
 
 ```ts
-{
-  sub: user.id,
-  email: user.email,
-  roles: user.roles
-}
+{ sub: user.id, email: user.email, roles: user.roles }
 ```
 
-Na validacao, o payload vira:
+Extraído do header `Authorization: Bearer TOKEN`. Após validação pelo `JwtStrategy`, `request.user` recebe:
 
 ```ts
-{
-  userId: payload.sub,
-  email: payload.email,
-  roles: payload.roles
-}
+{ userId: payload.sub, email: payload.email, roles: payload.roles }
 ```
-
-Esse objeto fica disponivel em rotas protegidas por meio do request.
 
 ### Roles
 
-O decorator `@Roles('admin')` define quais permissoes uma rota exige.
+O decorator `@Roles('admin')` marca uma rota como restrita.
 
-O `JwtAuthGuard` valida:
+O `JwtAuthGuard` verifica, nessa ordem:
 
-1. se o JWT e valido;
-2. se a rota exige role;
-3. se o usuario possui alguma das roles exigidas.
+1. Token JWT válido;
+2. Se a rota exige role;
+3. Se o usuário possui alguma das roles exigidas.
 
-## Fluxo de login diario
+Se faltar a role, retorna `403 Forbidden`.
 
-Sempre que o usuario faz login com senha ou Google, o service atualiza:
+### Hash de senha
 
-- `lastLoginAt`;
-- `loginStreak`.
+Senhas são armazenadas no formato `salt.hash` usando `scrypt` (Node.js nativo, sem bibliotecas externas).
 
-Regras:
+---
 
-- primeiro login: `loginStreak = 1`;
-- novo login no mesmo dia: mantem a sequencia;
-- login no dia seguinte: incrementa a sequencia;
-- se o usuario pular um dia: reinicia para `1`.
+## Sequência de login diário (`loginStreak`)
 
-A regra usa dias em UTC.
+Calculada em UTC a cada login com senha ou Google:
 
-## Testes existentes
+| Situação | Resultado |
+|---|---|
+| Primeiro login | `loginStreak = 1` |
+| Login no mesmo dia | Mantém o valor atual |
+| Login no dia seguinte | Incrementa em 1 |
+| Login após pular um dia | Reinicia para `1` |
 
-### Testes unitarios
+---
 
-Comando:
+## Validação de entrada
 
-```bash
-npm test
+O `ValidationPipe` global foi configurado em `src/main.ts` com:
+
+```ts
+app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 ```
 
-Cobrem principalmente:
+Todos os DTOs usam decorators do `class-validator`:
 
-- delegacao do `AuthController` para o `AuthService`;
-- cadastro;
-- email duplicado;
-- login;
-- senha incorreta;
-- recuperacao de senha;
-- reset de senha;
-- login Google;
-- regra de `loginStreak`.
+| DTO | Campos e decorators |
+|---|---|
+| `CreateUserDto` | `name` `@IsString @IsNotEmpty`, `email` `@IsEmail @IsNotEmpty`, `password` `@IsString @IsNotEmpty`, `roles?` `@IsArray @IsOptional` |
+| `SignInDto` | `email` `@IsEmail @IsNotEmpty`, `password` `@IsString @IsNotEmpty` |
+| `ForgotPasswordDto` | `email` `@IsEmail @IsNotEmpty` |
+| `ResetPasswordDto` | `token` `@IsString @IsNotEmpty`, `newPassword` `@IsString @IsNotEmpty` |
 
-### Teste e2e
+---
 
-Comando:
+## Testes
 
-```bash
-npm run test:e2e
-```
+### Testes unitários
 
-Atualmente cobre apenas:
+Comando: `npm test`
 
-- `GET /`
+**15 testes** cobrindo:
 
-Esse teste confirma que a aplicacao sobe, mas ainda nao valida os fluxos principais de autenticacao.
+| Arquivo | O que testa |
+|---|---|
+| `auth.controller.spec.ts` | Delegação do controller para o service (5 testes) |
+| `auth.service.spec.ts` | Cadastro, email duplicado, login, loginStreak (4 cenários), credenciais inválidas, forgot/reset password, login Google (10 testes) |
 
-## Limitacoes conhecidas
+### Testes e2e
 
-Estas limitacoes estao documentadas para manter clareza sobre o estado atual do projeto e evitar mudancas grandes demais para o escopo do TCC.
+Comando: `npm run test:e2e`
 
-### 1. Validacao de entrada ainda e simples
+**19 testes** usando mock do `PrismaService` (sem banco real):
 
-Os DTOs existem como classes, mas ainda nao possuem decorators como:
+| Suite | Testes |
+|---|---|
+| `GET /` | 200 Hello World! |
+| `GET /status` | 200 OK |
+| `GET /feature/public` | 200 sem autenticação |
+| `GET /feature/private` | 401 sem token |
+| `GET /feature/admin` | 401 sem token |
+| `POST /auth/signup` | 400 body vazio, 400 email inválido, 400 sem password, 201 válido, 400 email duplicado |
+| `POST /auth/signin` | 400 body vazio, 400 email inválido, 401 credenciais inválidas |
+| `POST /auth/forgot-password` | 400 body vazio, 400 email inválido, 400 usuário não encontrado, 201 token gerado |
+| `POST /auth/reset-password` | 400 body vazio, 400 token inválido |
 
-- `@IsEmail()`;
-- `@IsString()`;
-- `@IsNotEmpty()`;
-- `@IsOptional()`;
-- `@IsArray()`.
+---
 
-Tambem ainda nao ha `ValidationPipe` global em `src/main.ts`.
+## Limitações conhecidas
 
-Consequencia atual: alguns payloads invalidos podem chegar ao service e causar erro interno. Exemplo observado:
+### 1. Recuperação de senha simplificada
 
-```text
-POST /auth/signup sem password -> 500 Internal Server Error
-```
+O token de reset é retornado na resposta da API. Em produção, deveria ser enviado por email.
 
-O comportamento ideal e retornar:
+### 2. JWT com expiração curta
 
-```text
-400 Bad Request
-```
+O JWT expira em `60s` (configurado em `auth.module.ts`). Útil para demonstração de segurança, mas pode dificultar testes manuais longos. Ajuste `expiresIn` conforme necessário.
 
-Essa e a primeira correcao recomendada, sem alterar a estrutura base do projeto.
+### 3. Google OAuth depende de credenciais externas
 
-### 2. Recuperacao de senha simplificada
+O fluxo completo exige credenciais válidas e a URL de callback configurada no Google Cloud Console. Não é coberto por testes automatizados.
 
-O token de reset e retornado na resposta da API.
+### 4. Testes e2e sem banco real
 
-Isso facilita a demonstracao e os testes do TCC, mas em producao o token deveria ser enviado por email.
+Os testes e2e usam mock do `PrismaService`. Não validam migrations, índices ou queries reais.
 
-### 3. JWT com expiracao curta
+---
 
-O JWT expira em `60s`.
+## Princípios para alterações futuras
 
-Isso pode ser util para demonstracao de seguranca, mas pode atrapalhar testes manuais longos.
-
-### 4. Google OAuth depende de credenciais externas
-
-O endpoint `GET /auth/google` redireciona para o Google, mas o fluxo completo depende de:
-
-- credenciais validas;
-- callback configurado;
-- interacao com uma conta Google.
-
-Por isso, ele nao e tao simples de validar em teste automatizado local.
-
-### 5. Teste e2e ainda cobre pouco
-
-O e2e atual testa somente a rota raiz.
-
-Para aumentar confianca sem complexidade excessiva, seria util adicionar testes e2e para:
-
-- signup;
-- signin;
-- rota privada com token;
-- rota admin com role;
-- rota admin sem role;
-- forgot/reset password.
-
-### 6. README atual precisa de revisao
-
-O arquivo `README.md` contem marcadores de conflito Git:
-
-```text
-<<<<<<< HEAD
-=======
->>>>>>> origin/master
-```
-
-Este documento foi criado separadamente para evitar misturar a documentacao tecnica do projeto com a resolucao desse conflito.
-
-### 7. Lint possui pendencias
-
-Uma checagem com ESLint sem alteracao automatica encontrou pendencias de formatacao e alguns avisos de tipagem insegura.
-
-Como o script `npm run lint` usa `--fix`, qualquer ajuste de lint deve ser feito com cuidado para nao gerar mudancas grandes desnecessarias.
-
-## Principios para proximas correcoes
-
-Como este projeto e para TCC, as correcoes devem seguir estes criterios:
-
-- manter a estrutura atual de modulos, controllers, services e DTOs;
-- preferir solucoes nativas do NestJS;
-- evitar refatoracoes grandes;
-- corrigir um problema por vez;
-- manter os nomes e fluxos atuais sempre que possivel;
-- adicionar validacoes claras sem transformar o projeto em uma arquitetura mais complexa;
-- documentar qualquer comportamento que seja propositalmente simplificado para apresentacao academica.
-
-## Proxima correcao recomendada
-
-Corrigir o erro de validacao no signup:
-
-```text
-POST /auth/signup sem password -> 500
-```
-
-Caminho simples e alinhado ao NestJS:
-
-1. adicionar `ValidationPipe` global em `src/main.ts`;
-2. adicionar decorators de validacao nos DTOs de auth;
-3. manter `AuthController` e `AuthService` com a estrutura atual;
-4. testar novamente `signup`, `signin`, `forgot-password` e `reset-password`.
+- Manter a estrutura de módulos, controllers, services e DTOs;
+- Preferir soluções nativas do NestJS;
+- Evitar refatorações grandes antes da entrega;
+- Toda mudança no banco deve passar por migration do Prisma;
+- Senha nunca pode ser retornada pela API;
+- Não versionar `.env`, senhas, JWT secret ou credenciais Google.
