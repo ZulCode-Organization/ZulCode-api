@@ -1,6 +1,25 @@
+import {
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
 export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
   name!: string;
+
+  @IsEmail()
+  @IsNotEmpty()
   email!: string;
+
+  @IsString()
+  @IsNotEmpty()
   password!: string;
-  roles?: string[]; // Adiciona o campo de roles como opcional
+
+  @IsArray()
+  @IsOptional()
+  roles?: string[]; // campo opcional para definir permissões do usuário
 }

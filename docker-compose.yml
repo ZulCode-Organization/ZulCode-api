@@ -28,7 +28,8 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - DATABASE_URL=${DATABASE_URL}
-      - GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+      # Porta 3001 = backend NestJS. Configure o mesmo valor no Google Cloud Console.
+      - GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - JWT_SECRET=${JWT_SECRET}
