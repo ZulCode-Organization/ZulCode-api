@@ -486,6 +486,14 @@ O fluxo completo exige credenciais válidas e a URL de callback configurada no G
 
 Os testes e2e usam mock do `PrismaService`. Não validam migrations, índices ou queries reais.
 
+### 5. Prisma v7 + driver adapter e IntelliSense do VS Code
+
+O `PrismaService` usa `@prisma/adapter-pg` (driver adapter do Prisma v7). Isso faz com que o Language Server do VS Code às vezes não reconheça as propriedades de modelo (`.user`, `.passwordResetToken`) na instância do serviço, exibindo um sublinhado vermelho.
+
+**Isso é um falso positivo do editor.** O compilador TypeScript (`tsc --noEmit`) e o build (`nest build`) não apontam nenhum erro. Todos os 34 testes passam normalmente.
+
+Solução quando ocorrer: rodar `npx prisma generate` e reiniciar o TS Server no VS Code (`Ctrl+Shift+P` → `TypeScript: Restart TS Server`).
+
 ---
 
 ## Princípios para alterações futuras
@@ -496,3 +504,46 @@ Os testes e2e usam mock do `PrismaService`. Não validam migrations, índices ou
 - Toda mudança no banco deve passar por migration do Prisma;
 - Senha nunca pode ser retornada pela API;
 - Não versionar `.env`, senhas, JWT secret ou credenciais Google.
+
+---
+
+## Análise de próximas alterações
+
+Alterações avaliadas por viabilidade para o escopo atual do TCC:
+
+| # | Alteração | Esforço | Impacto | Viabilidade |
+|---|---|---|---|---|
+| **1** | `GET /auth/me` — retornar dados do usuário autenticado pelo JWT | Baixo | Alto | ✅ **Recomendada agora** |
+| 2 | JWT expiration via variável de ambiente (`JWT_EXPIRES_IN`) | Baixo | Médio | ✅ Viável |
+| 3 | Testes e2e com banco de dados real (PostgreSQL de teste) | Alto | Alto | ⚠️ Complexo para TCC |
+| 4 | Envio de email real no `forgot-password` (ex.: Nodemailer) | Médio | Baixo para TCC | ⏸ Desnecessário para entrega |
+| 5 | Documentação via Swagger / OpenAPI | Médio | Alto para banca | 🔜 Pós-entrega |
+
+### Por que `GET /auth/me` é a alteração mais viável agora
+
+- **Sem mudança de estrutura:** novo endpoint no `AuthController` já existente;
+- **Sem mudança no banco:** usa apenas o payload do JWT que já existe em `request.user`;
+- **Sem nova migration:** nenhuma alteração no schema;
+- **Demonstrável na apresentação:** prova que o JWT funciona e que rotas privadas expõem dados do usuário logado;
+- **Testável facilmente:** um novo teste e2e com token válido confirma o funcionamento.
+
+**Implementação esperada:**
+
+```ts
+// em auth.controller.ts
+@Get('me')
+@UseGuards(JwtAuthGuard)
+getMe(@CurrentUser() user: CurrentUserDto) {
+  return user;
+}
+```
+
+Resposta:
+
+```json
+{
+  "userId": "uuid",
+  "email": "usuario@email.com",
+  "roles": ["admin"]
+}
+```
