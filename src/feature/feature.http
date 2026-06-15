@@ -3,8 +3,8 @@ GET http://localhost:3001/feature/public
 
 ### private
 GET http://localhost:3001/feature/private
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBhY21lLmNvbSIsImlhdCI6MTc3OTIzMDMxOCwiZXhwIjoxNzc5MjMwMzc4fQ.HoRIhJfHMVcknWTDFU8B4OMqz963lMtnBj01s27pc10
+Authorization: Bearer 
 
 ## admin
 GET http://localhost:3001/feature/admin
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidGVzdEBhY21lLmNvbSIsImlhdCI6MTc3OTIzMDMxOCwiZXhwIjoxNzc5MjMwMzc4fQ.HoRIhJfHMVcknWTDFU8B4OMqz963lMtnBj01s27pc10
+Authorization: Bearer 

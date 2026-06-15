@@ -1,4 +1,8 @@
-import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ROLES_KEY } from './roles.decoreator';
@@ -22,9 +26,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return false;
     }
 
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY,[
+      context.getHandler(),context.getClass(),
     ]);
     if (!requiredRoles?.length) {
       return true; // se não houver roles/permissões, qualquer usuário autenticado pode acessar a rota

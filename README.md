@@ -1,312 +1,98 @@
-# ZulCode API
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-API de autenticação e controle de acesso desenvolvida em NestJS como projeto de TCC.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## Sobre o projeto
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-A ZulCode API é o backend responsável por autenticação de usuários, controle de acesso por roles e gamificação de login diário. Desenvolvida com NestJS sobre Node.js, segue a estrutura padrão de módulos, controllers, services, DTOs e Prisma.
+## Description
 
-**Foco acadêmico:** o código prioriza clareza e fluxo direto. As decisões de simplificação estão documentadas como limitações conhecidas.
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
----
-
-## Funcionalidades
-
-| Funcionalidade | Status |
-|---|---|
-| Cadastro com email e senha | ✅ |
-| Login com email e senha + JWT | ✅ |
-| Controle de acesso por roles | ✅ |
-| Rota pública, privada e admin | ✅ |
-| Login com Google OAuth 2.0 | ✅ |
-| Recuperação e redefinição de senha | ✅ |
-| Sequência de login diário (`loginStreak`) | ✅ |
-| Validação de entrada com `class-validator` | ✅ |
-
----
-
-## Tecnologias
-
-| Tecnologia | Uso |
-|---|---|
-| Node.js + TypeScript | Runtime e tipagem |
-| NestJS | Framework principal |
-| Prisma ORM | Acesso ao banco de dados |
-| PostgreSQL | Banco de dados |
-| Passport.js | Estratégias de autenticação |
-| JWT (`@nestjs/jwt`) | Emissão e validação de tokens |
-| Google OAuth 2.0 | Login social |
-| `class-validator` | Validação de DTOs |
-| Jest + Supertest | Testes unitários e e2e |
-
----
-
-## Pré-requisitos
-
-- Node.js 20+
-- PostgreSQL 16+ (ou Docker)
-- Credenciais Google OAuth configuradas no [Google Cloud Console](https://console.cloud.google.com/)
-
----
-
-## Variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
-
-```env
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/zulcode
-JWT_SECRET=sua-chave-secreta-aqui
-GOOGLE_CLIENT_ID=seu-google-client-id
-GOOGLE_CLIENT_SECRET=seu-google-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
-```
-
-> ⚠️ O `.env` nunca deve ser versionado. Ele já está no `.gitignore`.
->
-> No Google Cloud Console, registre exatamente a mesma URL configurada em `GOOGLE_CALLBACK_URL`.
-
----
-
-## Instalação e execução
-
-### 1. Instalar dependências
+## Project setup
 
 ```bash
-npm install
+$ npm install
 ```
 
-### 2. Subir o banco com Docker (recomendado)
+## Compile and run the project
 
 ```bash
-docker compose up db -d
+# development
+$ npm run start
+
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
 ```
 
-### 3. Aplicar migrations e gerar o Prisma Client
+## Run tests
 
 ```bash
-npx prisma migrate deploy
-npx prisma generate
+# unit tests
+$ npm run test
+
+# e2e tests
+$ npm run test:e2e
+
+# test coverage
+$ npm run test:cov
 ```
 
-### 4. Rodar em desenvolvimento
+## Deployment
+
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
 ```bash
-npm run start:dev
+$ npm install -g @nestjs/mau
+$ mau deploy
 ```
 
-A API estará disponível em `http://localhost:3001`.
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-### 5. Build de produção
+## Resources
 
-```bash
-npm run build
-npm run start:prod
-```
+Check out a few resources that may come in handy when working with NestJS:
 
----
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Endpoints
+## Support
 
-### Status
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-| Método | Rota | Autenticação | Resposta |
-|--------|------|---|---|
-| `GET` | `/` | Nenhuma | `Hello World!` |
-| `GET` | `/status` | Nenhuma | `OK` |
+## Stay in touch
 
-### Autenticação
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
 
-| Método | Rota | Autenticação | Descrição |
-|--------|------|---|---|
-| `POST` | `/auth/signup` | Nenhuma | Cadastro de usuário |
-| `POST` | `/auth/signin` | Nenhuma | Login com email e senha |
-| `POST` | `/auth/forgot-password` | Nenhuma | Gerar token de recuperação |
-| `POST` | `/auth/reset-password` | Nenhuma | Redefinir senha com token |
-| `GET` | `/auth/google` | Nenhuma | Iniciar login com Google |
-| `GET` | `/auth/google/callback` | Nenhuma | Callback do Google OAuth |
+## License
 
-### Feature (rotas de exemplo)
-
-| Método | Rota | Autenticação | Descrição |
-|--------|------|---|---|
-| `GET` | `/feature/public` | Nenhuma | Rota pública |
-| `GET` | `/feature/private` | JWT | Rota autenticada |
-| `GET` | `/feature/admin` | JWT + role `admin` | Rota administrativa |
-
----
-
-## Exemplos de uso
-
-### Cadastro
-
-```http
-POST /auth/signup
-Content-Type: application/json
-
-{
-  "name": "João Silva",
-  "email": "joao@email.com",
-  "password": "minhasenha123",
-  "roles": ["admin"]
-}
-```
-
-> `roles` é opcional. Quando omitido, o usuário é criado sem permissões especiais.
-
-Resposta `201`:
-
-```json
-{
-  "id": "uuid",
-  "name": "João Silva",
-  "email": "joao@email.com",
-  "createdAt": "2026-06-12T...",
-  "loginStreak": 0
-}
-```
-
-### Login
-
-```http
-POST /auth/signin
-Content-Type: application/json
-
-{
-  "email": "joao@email.com",
-  "password": "minhasenha123"
-}
-```
-
-Resposta `200`:
-
-```json
-{
-  "accessToken": "eyJhbGci...",
-  "user": {
-    "id": "uuid",
-    "name": "João Silva",
-    "email": "joao@email.com",
-    "roles": ["admin"],
-    "createdAt": "2026-06-12T...",
-    "loginStreak": 1,
-    "lastLoginAt": "2026-06-12T..."
-  }
-}
-```
-
-### Rota privada
-
-```http
-GET /feature/private
-Authorization: Bearer eyJhbGci...
-```
-
-### Recuperação de senha
-
-```http
-POST /auth/forgot-password
-Content-Type: application/json
-
-{ "email": "joao@email.com" }
-```
-
-Resposta `201`:
-
-```json
-{
-  "message": "Token de recuperacao gerado com sucesso",
-  "resetToken": "uuid-do-token"
-}
-```
-
-```http
-POST /auth/reset-password
-Content-Type: application/json
-
-{
-  "token": "uuid-do-token",
-  "newPassword": "novasenha456"
-}
-```
-
----
-
-## Testes
-
-```bash
-# Testes unitários (15 testes)
-npm test
-
-# Testes e2e (19 testes, sem banco real)
-npm run test:e2e
-
-# Cobertura
-npm run test:cov
-```
-
----
-
-## Validação de entrada
-
-Todos os endpoints utilizam `ValidationPipe` global com `class-validator`. Payloads inválidos retornam `400 Bad Request` com descrição do erro.
-
-Exemplos de erros validados:
-
-| Caso | Resposta |
-|---|---|
-| `POST /auth/signup` sem `password` | `400 Bad Request` |
-| `POST /auth/signin` com email inválido | `400 Bad Request` |
-| `POST /auth/forgot-password` com body vazio | `400 Bad Request` |
-
----
-
-## Limitações conhecidas (TCC)
-
-1. **Token de recuperação na resposta** — retornado diretamente pela API para facilitar testes. Em produção, deveria ser enviado por email.
-2. **JWT expira em 60 segundos** — configurado para demonstração de segurança. Ajuste `expiresIn` em `auth.module.ts` conforme necessário.
-3. **Google OAuth** — o fluxo completo depende de credenciais externas e não é coberto por testes automatizados.
-
----
-
-## Estrutura do projeto
-
-```
-src/
-├── main.ts                      # Bootstrap + ValidationPipe global
-├── app.module.ts
-├── app.controller.ts
-├── app.service.ts
-│
-├── auth/
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   ├── auth.module.ts
-│   ├── jwt.strategy.ts
-│   ├── jwt-auth.guard.ts        # Guard JWT + verificação de roles
-│   ├── google.strategy.ts
-│   ├── google-auth.guard.ts
-│   ├── roles.decoreator.ts
-│   ├── current-user.decorator.ts
-│   ├── current-user.dto.ts
-│   ├── status.controller.ts
-│   └── dto/
-│       ├── create-user.dto.ts
-│       ├── sign-in.dto.ts
-│       ├── forgot-password.dto.ts
-│       └── reset-password.dto.ts
-│
-├── feature/
-│   ├── feature.controller.ts
-│   └── feature.module.ts
-│
-└── prisma/
-    ├── prisma.module.ts
-    └── prisma.service.ts
-
-prisma/
-├── schema.prisma
-└── migrations/
-
-test/
-└── app.e2e-spec.ts
-```
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
